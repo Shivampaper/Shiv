@@ -1,0 +1,203 @@
+# Let's generate the basic files for the website. I'll create HTML, CSS, and JS content for a modern, futuristic design.
+
+website_files = {
+    "index.html": """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shivam Paper Industry</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="logo">
+            <h1>Shivam Paper Industry</h1>
+            <p>Your trusted notebook manufacturer</p>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Home Section -->
+    <section id="home">
+        <div class="hero">
+            <h2>Welcome to Shivam Paper Industry</h2>
+            <p>Leading the way in quality notebook manufacturing.</p>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section id="about">
+        <h2>About Us</h2>
+        <p>Founded by Naresh Agrawal, Shivam Paper Industry has been serving the region of Raigarh, Chhattisgarh with high-quality notebooks and paper products. We pride ourselves on our commitment to excellence and sustainability.</p>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products">
+        <h2>Our Products</h2>
+        <div class="product-list">
+            <div class="product">
+                <img src="notebook1.jpg" alt="Notebook 1">
+                <h3>Standard Notebooks</h3>
+                <p>High-quality paper for everyday use.</p>
+            </div>
+            <div class="product">
+                <img src="notebook2.jpg" alt="Notebook 2">
+                <h3>Eco-friendly Notebooks</h3>
+                <p>Environmentally friendly notebooks for sustainable use.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Us Section -->
+    <section id="contact">
+        <h2>Contact Us</h2>
+        <p>Visit us at: Shivam Paper Industries, Semi Urban Area, South Chakardhar Nagar, Raigarh, Chhattisgarh, 496001 India</p>
+        <form>
+            <input type="text" placeholder="Name" required>
+            <input type="email" placeholder="Email" required>
+            <textarea placeholder="Message" required></textarea>
+            <button type="submit">Submit</button>
+        </form>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Shivam Paper Industry. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+    """,
+    "styles.css": """
+/* General Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: #f1f1f1;
+    color: #333;
+}
+
+header {
+    background: #222;
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header .logo h1 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+header nav ul {
+    list-style-type: none;
+}
+
+header nav ul li {
+    display: inline;
+    margin-right: 20px;
+}
+
+header nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.hero {
+    text-align: center;
+    padding: 50px;
+    background: linear-gradient(135deg, #008080, #00b3b3);
+    color: #fff;
+}
+
+section {
+    padding: 20px;
+    margin: 20px 0;
+}
+
+h2 {
+    color: #008080;
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+/* Product List */
+.product-list {
+    display: flex;
+    justify-content: space-around;
+}
+
+.product {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.product img {
+    max-width: 100%;
+    height: auto;
+}
+
+form input, form textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+form button {
+    background: #008080;
+    color: #fff;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    background: #222;
+    color: #fff;
+    padding: 10px;
+}
+    """,
+    "script.js": """
+// Optional: Add dynamic interaction if needed
+document.querySelector("form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    alert("Thank you for your message!");
+});
+    """
+}
+
+# Save the files to the disk
+import os
+os.makedirs('/mnt/data/website', exist_ok=True)
+
+for filename, content in website_files.items():
+    with open(f"/mnt/data/website/{filename}", "w") as file:
+        file.write(content)
+
+"/mnt/data/website"
