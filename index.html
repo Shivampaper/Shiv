@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obsidian Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#06080B; --slate:#10141A; --slate2:#1A202A; --bone:#ECE6D8; --mute:#8A8F98; --brass:#C8A862;
+  --t-instant:140ms; --t-base:240ms; --t-slow:420ms;
+  --ease-enter:cubic-bezier(.2,.7,.2,1); --ease-exit:cubic-bezier(.4,0,1,1); --ease-move:cubic-bezier(.65,0,.35,1);
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--ink);overflow:hidden;font-family:'Manrope',system-ui,sans-serif;color:var(--bone)}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  background:radial-gradient(1200px 700px at 18% 12%,#121821 0%,var(--ink) 65%)}
+.serif{font-family:'Instrument Serif',Georgia,serif;font-weight:400}
+#clock{position:absolute;left:96px;top:72px;font-size:232px;line-height:.9;letter-spacing:-4px}
+#date{position:absolute;left:96px;top:300px;font-size:32px;color:var(--mute)}
+#info{position:absolute;right:96px;top:96px;width:760px;text-align:right}
+#info .t{font-size:72px;line-height:1}
+#info .d{font-size:30px;color:var(--mute);margin-top:14px}
+#info>div{transition:opacity var(--t-instant) var(--ease-enter)}
+#info.swap>div{opacity:0}
+.row{position:absolute;left:96px;width:1728px}
+#r0{top:458px} #r1{top:790px}
+.title{font-size:28px;color:var(--mute);margin-bottom:22px}
+.clip{overflow:hidden;padding:26px;margin:-26px}
+.rail{position:relative;display:flex;gap:32px;transition:transform var(--t-base) var(--ease-move)}
+.cell{flex:0 0 auto}
+.tile{position:relative;width:232px;height:232px;border-radius:28px;background:var(--slate);
+  display:flex;flex-direction:column;justify-content:flex-end;padding:26px;transition:transform var(--t-instant) var(--ease-enter);cursor:pointer}
+.tile::before,.tile::after{content:"";position:absolute;pointer-events:none;opacity:0;transition:opacity var(--t-instant) var(--ease-enter)}
+.tile::before{inset:0;border-radius:inherit;background:var(--slate2)}
+.tile::after{inset:-7px;border:3px solid var(--bone);border-radius:34px}
+.tile>*{position:relative}
+.mono{font-size:96px;line-height:1;margin-bottom:auto}
+.name{font-size:30px;font-weight:600}
+.small .tile{width:300px;height:110px;border-radius:22px;flex-direction:row;align-items:center;justify-content:flex-start;gap:20px;padding:0 28px}
+.small .tile::after{border-radius:28px}
+.small .mono{font-size:54px;margin:0}
+.small .name{font-size:28px}
+.tile.focus{transform:scale(1.07)}
+.tile.focus::before,.tile.focus::after{opacity:1}
+.tile.focus .mono{color:var(--brass)}
+#hint{position:absolute;left:96px;bottom:54px;font-size:24px;color:var(--mute);display:flex;gap:44px}
+#hint b{color:var(--bone);font-weight:600;margin-right:10px}
+#toast{position:absolute;right:96px;bottom:54px;font-size:26px;color:var(--brass);opacity:0;transform:translate3d(0,12px,0);
+  transition:opacity var(--t-base) var(--ease-enter),transform var(--t-base) var(--ease-enter)}
+#toast.on{opacity:1;transform:none}
+/* signature moment: one orchestrated reveal on load */
+@keyframes rise{from{opacity:0;transform:translate3d(0,28px,0)}to{opacity:1;transform:none}}
+#clock,#date{animation:rise var(--t-slow) var(--ease-enter) backwards}
+#date{animation-delay:60ms}
+#info{animation:rise var(--t-slow) var(--ease-enter) backwards;animation-delay:120ms}
+.cell{animation:rise var(--t-base) var(--ease-enter) backwards;animation-delay:calc(220ms + var(--i)*40ms)}
+.title,#hint{animation:rise var(--t-base) var(--ease-enter) backwards;animation-delay:200ms}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition-duration:1ms!important}
+  .tile.focus{transform:none}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="clock" class="serif">--:--</div>
+  <div id="date"></div>
+  <div id="info"><div class="t serif" id="it"></div><div class="d" id="id"></div></div>
+  <div class="row" id="r0"><div class="title">Play</div><div class="clip"><div class="rail" data-row="0"></div></div></div>
+  <div class="row small" id="r1"><div class="title">Inputs</div><div class="clip"><div class="rail" data-row="1"></div></div></div>
+  <div id="hint"><span><b>Arrows</b>Move</span><span><b>OK</b>Open</span><span><b>Back</b>Exit</span></div>
+  <div id="toast"></div>
+</div>
+<script>
+// Real Tizen application IDs & fallback backend bridge endpoints
+var DATA=[
+ [
+  {n:'YouTube',m:'Y',d:'Videos, subscriptions and live streams',id:'111299001912'},
+  {n:'Netflix',m:'N',d:'Movies, series and Dolby Atmos originals',id:'3201907018807'},
+  {n:'Apple TV+',m:'A',d:'Apple Originals and cinematic 4K HDR shows',id:'3201807016597'},
+  {n:'Spotify',m:'S',d:'High fidelity lossless music and podcasts',id:'3201606009684'},
+  {n:'Gaming Hub',m:'G',d:'Browse and launch cloud games',id:''},
+  {n:'Xbox Cloud',m:'X',d:'Play Xbox games with no console',id:''},
+  {n:'GeForce NOW',m:'F',d:'Stream PC games from the cloud',id:''},
+  {n:'Settings',m:'\u2699',d:'Picture, sound and Bluetooth',key:'KEY_TOOLS'}
+ ],
+ [
+  {n:'HDMI 1 Laptop',m:'1',d:'Wired connection, lowest latency',key:'KEY_SOURCE'},
+  {n:'HDMI 2 Console',m:'2',d:'Console or set-top box',key:'KEY_SOURCE'},
+  {n:'Screen Mirror',m:'M',d:'Phone or laptop over Wi-Fi',key:'KEY_SOURCE'},
+  {n:'Controllers',m:'C',d:'Pair a Bluetooth gamepad',key:'KEY_TOOLS'}
+ ]
+];
+var pos={r:0,c:0}, last=[0,0], lastKey=0, tiles=[[],[]], rails=[].slice.call(document.querySelectorAll('.rail'));
+var it=document.getElementById('it'), idd=document.getElementById('id'), info=document.getElementById('info');
+
+DATA.forEach(function(row,r){row.forEach(function(d,i){
+  var cell=document.createElement('div'); cell.className='cell'; cell.style.setProperty('--i',Math.min(i,7)+(r?7:0));
+  var t=document.createElement('div'); t.className='tile';
+  t.innerHTML='<div class="mono serif">'+d.m+'</div><div class="name">'+d.n+'</div>';
+  t.onclick=function(){pos.r=r;pos.c=i;paint(false);setInfo(false);launch();};
+  cell.appendChild(t); rails[r].appendChild(cell); tiles[r].push(t);
+});});
+
+var swapT;
+function setInfo(instant){
+  var d=DATA[pos.r][pos.c];
+  if(instant){it.textContent=d.n;idd.textContent=d.d;return}
+  info.classList.add('swap'); clearTimeout(swapT);
+  swapT=setTimeout(function(){it.textContent=d.n;idd.textContent=d.d;info.classList.remove('swap')},100);
+}
+var offs=[0,0];
+function paint(fast){
+  tiles.forEach(function(row,r){row.forEach(function(t,c){t.classList.toggle('focus',r===pos.r&&c===pos.c)})});
+  var cell=tiles[pos.r][pos.c].parentNode, rail=rails[pos.r], view=1728, o=offs[pos.r];
+  var l=cell.offsetLeft, rr=l+cell.offsetWidth;
+  if(l<o)o=l; if(rr>o+view)o=rr-view;
+  offs[pos.r]=o; rail.style.transitionDuration=fast?'0ms':''; rail.style.transform='translate3d('+(-o)+'px,0,0)';
+}
+function toast(s){var el=document.getElementById('toast');el.textContent=s;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('on')},1800)}
+
+function launch(){
+  var d=DATA[pos.r][pos.c];
+  toast('Launching '+d.n+'...');
+  // 1. Try native Tizen Application API if available
+  try{
+    if(window.tizen&&d.id){tizen.application.launch(d.id);return}
+  }catch(e){}
+  // 2. Call local PC controller bridge API
+  if(d.id){
+    fetch('/api/launch/'+d.id, {method:'POST'}).catch(function(){});
+  } else if(d.key){
+    fetch('/api/key/'+d.key, {method:'POST'}).catch(function(){});
+  }
+}
+
+function move(dr,dc,fast){
+  if(dr){last[pos.r]=pos.c;var nr=pos.r+dr;if(nr<0||nr>=DATA.length)return;pos.r=nr;pos.c=Math.min(last[nr],DATA[nr].length-1)}
+  else pos.c=Math.max(0,Math.min(DATA[pos.r].length-1,pos.c+dc));
+  paint(fast); setInfo(fast);
+}
+document.addEventListener('keydown',function(e){
+  var now=performance.now(), fast=e.repeat||now-lastKey<90; lastKey=now;
+  switch(e.keyCode){
+    case 37:move(0,-1,fast);e.preventDefault();break;
+    case 39:move(0,1,fast);e.preventDefault();break;
+    case 38:move(-1,0,fast);e.preventDefault();break;
+    case 40:move(1,0,fast);e.preventDefault();break;
+    case 13:launch();e.preventDefault();break;
+    case 10009:case 27:case 8:toast('Home or Exit to return');break;
+  }
+});
+try{if(window.tizen){tizen.tvinputdevice.registerKey('Back')}}catch(e){}
+
+function tick(){var n=new Date(),h=n.getHours(),m=n.getMinutes();
+  document.getElementById('clock').textContent=(h%12||12)+':'+(m<10?'0':'')+m;
+  document.getElementById('date').textContent=n.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}
+function fit(){var s=Math.min(innerWidth/1920,innerHeight/1080),st=document.getElementById('stage');
+  st.style.transform='scale('+s+')';st.style.left=(innerWidth-1920*s)/2+'px';st.style.top=(innerHeight-1080*s)/2+'px'}
+tick();fit();paint(true);setInfo(true);setInterval(tick,15000);addEventListener('resize',fit);
+
+// Optional double click / tap for fullscreen
+document.addEventListener('dblclick', function(){
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen().catch(function(){});}
+});
+</script>
+</body>
+</html>
